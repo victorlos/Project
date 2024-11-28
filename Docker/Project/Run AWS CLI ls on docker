@@ -1,6 +1,0 @@
-
-# Run configure to create aws credentials and config files
-docker run --rm -ti -v ~/.aws:/root/.aws amazon/aws-cli configure
-
-# Run command in cli from /home folder
-docker run --rm -ti -v ~/.aws:/root/.aws amazon/aws-cli s3 ls
