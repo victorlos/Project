@@ -17,43 +17,41 @@ aws_secret_key = config['default']['aws_secret_access_key']
 
 
 
-def upload_file(file_name, bucket, object_name=None):
-    """Upload a file to an S3 bucket"""
+def download_file(key, bucket, file_name):
+    """Download a file from an S3 bucket"""
 
-    if object_name is None:
-            object_name = os.path.basename('test.txt') 
 
     s3_client = boto3.client('s3',
                              aws_access_key_id=aws_access_key,
                              aws_secret_access_key=aws_secret_key)
+
     try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
+        response = s3_client.download_file(Key=key, Bucket=bucket,Filename=file_name)
+        # s3_client.list_objects(Bucket=bucket,Prefix=file_name)
+        print(response)
     except ClientError as e:
         logging.error(e)
+        print(e)
         return False
     return True
 
 dag = DAG(
-    dag_id="upload_to_s3",
+    dag_id="download_from_s3",
     catchup=False,
     start_date=pendulum.datetime(2024, 12, 1, tz="UTC"),
     schedule="@daily"
 )
 
-dummy = DummyOperator(
-    task_id="test",
-    dag=dag
-)
 
-upload= PythonOperator(
-    task_id="upload",
-    python_callable=upload_file,
+download = PythonOperator(
+    task_id="download",
+    python_callable=download_file,
     op_kwargs = {
-            'file_name': '/opt/airflow/dags/test.txt',
+            'key': 'test.txt',
             'bucket': 'my-private-bucket2345',
-            'object_name': None,
+            'file_name': '/opt/airflow/config/test_downloaded.txt',
             },
     dag=dag,
 )
 
-dummy >> upload
+download
